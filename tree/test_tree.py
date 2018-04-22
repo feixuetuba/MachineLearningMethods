@@ -35,23 +35,22 @@ def get_dataset(data_path):
     return classes, attrs, attrv, np.matrix(data).astype(int) - 1
 
 def anno_match(classes, attrs, attrv, tree):
-    if "root" not in tree:
-        #classify
-        _tree = {}
-        for k, v in tree.items():
-            cls = classes[k]
-            _tree[cls] = v
-        return _tree
     _tree = {"root":None, "branches":{}}
-    root_index = tree["root"]
-    _tree["root"] = attrs[root_index]
-    for v, t in tree['branches'].items():
-        v = attrv[root_index][v]
-        _tree["branches"][v] = anno_match(classes, attrs, attrv, t)
+    if tree['root'] is None:
+        for key, value in tree['branches'].items():
+            key = classes[key]
+            _tree["branches"][key] = value
+        return _tree
+    
+    attr_index = tree["root"]
+    _tree["root"] = attrs[attr_index]
+    for key, value in tree['branches'].items():
+        key = attrv[attr_index][key]
+        _tree["branches"][key] = anno_match(classes, attrs, attrv, value)
     return _tree
-
+    
 if __name__ == '__main__':
-    classes, attrs, attrv, ds = get_dataset("/home/pi/playground/data/lenses/lenses.data")
+    classes, attrs, attrv, ds = get_dataset("../ref/lenses/lenses.data")
     tree = Tree.id3_build_tree(ds, [x for x in range( len(attrs) )] )
     print(tree)
     print(anno_match(classes, attrs, attrv, tree))
