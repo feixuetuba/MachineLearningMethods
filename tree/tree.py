@@ -45,24 +45,28 @@ def getBestSplitAttr(dataset, attr_list):
             best_attr = attr
             max_gain = gain
             value_category = values
-            value_list = vlist
-    return best_attr, value_category, value_list
+    return best_attr, value_category
 
 def id3_build_tree(dataset, attrs):
     tree = {"root":None, "branches":{}}
+    val_list = dataset[:, -1].T.tolist()[0]
+    val_cat = set(val_list)
+    
+    if len(val_cat) == 0:
+        print(dataset.shape)
     
     if len(attrs) == 0:
-        val_list = dataset[:, -1].T.tolist()[0]
-        val_cat = set(val_list)
+        print("att is zero")
         for v in val_cat:
             tree['branches'][v] = np.sum(np.equal(val_list, v))
             return tree
-            
-    best_attr, val_cat, vlist = getBestSplitAttr(dataset, attrs)
+
     if len(val_cat) == 1:
-        v = val_cat.pop()
-        tree["branches"][v] = len(vlist)
+        print("cat is zero")
+        tree = {"root":None, "branches":{val_cat.pop(): len(val_list)}}
         return tree
+    
+    best_attr, val_cat = getBestSplitAttr(dataset, attrs)
         
     tree["root"] = best_attr
     attrs.pop(attrs.index(best_attr))    
@@ -70,6 +74,24 @@ def id3_build_tree(dataset, attrs):
         subd = splitDataset(dataset, best_attr, v)
         tree['branches'][v] = id3_build_tree(subd, copy.copy(attrs))
     return tree
+ 
+#valid, if branches not in tree, return default
+def tree_forward(data, tree, default=0):
+    root_index = tree["root"]
+    if root_index is None:
+        minv = -1
+        label = -1
+        for k, v in tree['branches'].items():
+            if minv < v:
+                label = k
+        return label
+    
+    v = data[root_index]
+    branches = tree["branches"]
+    if v not in branches:
+        return default
+    return tree_forward(data, branches[v], default=0)
+    
 if __name__ == '__main__':
     data = [
         [1, 1, 1]
@@ -79,5 +101,8 @@ if __name__ == '__main__':
         ,[0, 1, 0]
     ]
     data = np.matrix(data)
-    print(id3_build_tree(data, [0, 1])) 
+    tree = id3_build_tree(data, [0, 1])
+    print(tree)
+    for d in data:
+        print(tree_forward(d.tolist()[0], tree, 0))
     

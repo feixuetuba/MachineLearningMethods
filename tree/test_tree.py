@@ -54,3 +54,6 @@ if __name__ == '__main__':
     tree = Tree.id3_build_tree(ds, [x for x in range( len(attrs) )] )
     print(tree)
     print(anno_match(classes, attrs, attrv, tree))
+    for d in ds:
+        d = d.tolist()[0]
+        print(d[:-1], d[-1], Tree.tree_forward(d, tree, 0))
