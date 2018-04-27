@@ -39,11 +39,10 @@ class AdaBoost:
                 break
     
     def predict(self, X):
-        clses = [0, 0]
+        cls = 0
         for weak in self.weaks:
-            cls = self.w(X, weak['param'])
-            clses[cls] += weak['alpha']
-        return np.argmax(clses)
+            cls += self.w(X, weak['param'])
+        return np.sign(cls)
 
     def dump_mode(self):
         with open('./boost.mode', 'wb') as fd:
